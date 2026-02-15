@@ -1,0 +1,32 @@
+FROM eclipse-temurin:17-jdk-jammy
+
+# Spark and Scala versions
+ENV SPARK_VERSION=4.1.1
+ENV HADOOP_VERSION=3
+
+# Install dependencies
+RUN apt-get update && \
+    apt-get install -y curl wget procps rsync && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download and install Spark
+COPY deps/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz .
+RUN tar -xzf spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz && \
+    mv spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} /opt/spark && \
+    rm spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz
+
+# Set environment variables
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin
+ENV PYTHONPATH=$SPARK_HOME/python:$SPARK_HOME/python/lib/py4j-0.10.9.7-src.zip:$PYTHONPATH
+
+# Create directories
+RUN mkdir -p /opt/spark/logs /opt/notebooks /opt/data
+
+# Set working directory
+WORKDIR /opt/spark
+
+# Expose ports
+EXPOSE 8080 7077 8081 4040
+
+CMD ["/bin/bash"]
